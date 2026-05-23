@@ -1,0 +1,37 @@
+import { Controller, UseGuards, Get, Post, Body, Param, Patch, Delete } from '@nestjs/common';
+import { AuthGuard } from '../auth/auth.guard';
+import { RolesGuard, Role } from '../helper/roles-guard';
+import { BatchesService } from './batches.service';
+import { Prisma } from '@prisma/client';
+
+@UseGuards(AuthGuard, RolesGuard)
+@Role('ADMIN')
+@Controller('batches')
+export class BatchesController {
+	constructor(private readonly batchesService: BatchesService) {}
+
+	@Post()
+	create(@Body() createBatchDto: Prisma.BatchCreateInput) {
+		return this.batchesService.create(createBatchDto);
+	}
+
+	@Get()
+	findAll() {
+		return this.batchesService.findAll();
+	}
+
+	@Get(':id')
+	findOne(@Param('id') id: string) {
+		return this.batchesService.findOne(+id);
+	}
+
+	@Patch(':id')
+	update(@Param('id') id: string, @Body() updateBatchDto: Prisma.BatchUpdateInput) {
+		return this.batchesService.update(+id, updateBatchDto);
+	}
+
+	@Delete(':id')
+	remove(@Param('id') id: string) {
+		return this.batchesService.remove(+id);
+	}
+}
