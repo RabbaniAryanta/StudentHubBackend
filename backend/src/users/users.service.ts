@@ -1,7 +1,9 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { BcryptService } from '../bcrypt/bcrypt.service';
-import { Prisma } from '@prisma/client';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+
 
 @Injectable()
 export class UsersService {
@@ -10,7 +12,7 @@ export class UsersService {
 		private readonly bcryptService: BcryptService,
 	) {}
 
-	async create(data: Prisma.UserUncheckedCreateInput) {
+	async create(data: CreateUserDto) {
 		const existingUser = await this.prisma.user.findUnique({ where: { email: data.email } });
 
 		if (existingUser) {
@@ -53,7 +55,7 @@ export class UsersService {
 		});
 	}
 
-	async update(id: number, data: Prisma.UserUncheckedUpdateInput) {
+	async update(id: number, data: UpdateUserDto) {
 		if (typeof data.email === 'string') {
 			const existingUser = await this.prisma.user.findFirst({
 				where: { email: data.email, NOT: { id } },
@@ -64,7 +66,7 @@ export class UsersService {
 			}
 		}
 
-		const nextData = { ...data } as Prisma.UserUncheckedUpdateInput;
+		const nextData = { ...data } as UpdateUserDto;
 
 		if (typeof nextData.password === 'string') {
 			nextData.password = await this.bcryptService.hashPassword(nextData.password);

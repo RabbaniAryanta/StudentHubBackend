@@ -2,7 +2,9 @@ import { Controller, UseGuards, Get, Post, Body, Param, Patch, Delete } from '@n
 import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard, Role } from '../helper/roles-guard';
 import { WishlistsService } from './wishlists.service';
-import { Prisma } from '@prisma/client';
+import { CreateWishlistDto } from './dto/create-wishlist.dto';
+import { UpdateWishlistDto } from './dto/update-wishlist.dto';
+
 
 @UseGuards(AuthGuard)
 @Controller('wishlists')
@@ -10,7 +12,7 @@ export class WishlistsController {
 	constructor(private readonly wishlistsService: WishlistsService) {}
 
 	@Post()
-	create(@Body() createWishlistDto: Prisma.WishlistUncheckedCreateInput) {
+	create(@Body() createWishlistDto: CreateWishlistDto) {
 		return this.wishlistsService.create(createWishlistDto);
 	}
 
@@ -25,7 +27,7 @@ export class WishlistsController {
 	}
 
 	@Patch(':id')
-	update(@Param('id') id: string, @Body() updateWishlistDto: Prisma.WishlistUncheckedUpdateInput) {
+	update(@Param('id') id: string, @Body() updateWishlistDto: UpdateWishlistDto) {
 		return this.wishlistsService.update(+id, updateWishlistDto);
 	}
 

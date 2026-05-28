@@ -2,7 +2,9 @@ import { Controller, UseGuards, Get, Post, Body, Param, Patch, Delete } from '@n
 import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard, Role } from '../helper/roles-guard';
 import { MajorsService } from './majors.service';
-import { Prisma } from '@prisma/client';
+import { CreateMajorDto } from './dto/create-majors.dto';
+import { UpdateMajorDto } from './dto/update-majors.dto';
+
 
 @UseGuards(AuthGuard, RolesGuard)
 @Role('ADMIN')
@@ -11,7 +13,7 @@ export class MajorsController {
 	constructor(private readonly majorsService: MajorsService) {}
 
 	@Post()
-	create(@Body() createMajorDto: Prisma.MajorCreateInput) {
+	create(@Body() createMajorDto: CreateMajorDto) {
 		return this.majorsService.create(createMajorDto);
 	}
 
@@ -26,7 +28,7 @@ export class MajorsController {
 	}
 
 	@Patch(':id')
-	update(@Param('id') id: string, @Body() updateMajorDto: Prisma.MajorUpdateInput) {
+	update(@Param('id') id: string, @Body() updateMajorDto: UpdateMajorDto) {
 		return this.majorsService.update(+id, updateMajorDto);
 	}
 

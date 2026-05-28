@@ -2,7 +2,9 @@ import { Controller, UseGuards, Get, Post, Body, Param, Patch, Delete } from '@n
 import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard, Role } from '../helper/roles-guard';
 import { BatchesService } from './batches.service';
-import { Prisma } from '@prisma/client';
+import { CreateBatchDto } from './dto/create-batches.dto';
+import { UpdateBatchDto } from './dto/update-batches.dto';
+
 
 @UseGuards(AuthGuard, RolesGuard)
 @Role('ADMIN')
@@ -11,7 +13,7 @@ export class BatchesController {
 	constructor(private readonly batchesService: BatchesService) {}
 
 	@Post()
-	create(@Body() createBatchDto: Prisma.BatchCreateInput) {
+	create(@Body() createBatchDto: CreateBatchDto) {
 		return this.batchesService.create(createBatchDto);
 	}
 
@@ -26,7 +28,7 @@ export class BatchesController {
 	}
 
 	@Patch(':id')
-	update(@Param('id') id: string, @Body() updateBatchDto: Prisma.BatchUpdateInput) {
+	update(@Param('id') id: string, @Body() updateBatchDto: UpdateBatchDto) {
 		return this.batchesService.update(+id, updateBatchDto);
 	}
 

@@ -1,13 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import { CreateOrderDto } from './dto/create-orders.dto';
+import { UpdateOrderDto } from './dto/update-orders.dto';
+
 
 @Injectable()
 export class OrdersService {
 	constructor(private readonly prisma: PrismaService) {}
 
-	async create(data: Prisma.OrderUncheckedCreateInput) {
-		return this.prisma.order.create({ data });
+	async create(data: CreateOrderDto) {
+		return this.prisma.order.create({ data: data as Prisma.OrderUncheckedCreateInput });
 	}
 
 	async findAll() {
@@ -29,7 +32,7 @@ export class OrdersService {
 		return order;
 	}
 
-	async update(id: number, data: Prisma.OrderUncheckedUpdateInput) {
+	async update(id: number, data: UpdateOrderDto) {
 		return this.prisma.order.update({ where: { id }, data });
 	}
 

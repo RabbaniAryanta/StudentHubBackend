@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { CreateBankAccountDto } from './dto/create-bank-account.dto';
+import { UpdateBankAccountDto } from './dto/update-bank-account.dto';
+
 
 @Injectable()
 export class BankAccountsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: Prisma.BankAccountCreateInput) {
+  async create(data: CreateBankAccountDto) {
     return this.prisma.bankAccount.create({ data });
   }
 
@@ -24,7 +26,7 @@ export class BankAccountsService {
     return bankAccount;
   }
 
-  async update(id: number, data: Prisma.BankAccountUpdateInput) {
+  async update(id: number, data: UpdateBankAccountDto) {
     return this.prisma.bankAccount.update({
       where: { id },
       data,

@@ -18,7 +18,7 @@ export class MailService {
 
   async sendOtp(email: string, otp: string) {
     const mailOptions = {
-      from: `"TEFA Catalog Support" <${this.configService.get<string>('MAIL_USER')}>`,
+      from: `"StudentHub Support" <${this.configService.get<string>('MAIL_USER')}>`,
       to: email,
       subject: 'Your 2FA Verification Code',
       html: `
@@ -31,7 +31,7 @@ export class MailService {
           </div>
           <p style="font-size: 14px; color: #888;">This code will expire in 5 minutes. If you did not attempt to log in, please secure your account immediately.</p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-          <p style="font-size: 12px; color: #aaa; text-align: center;">&copy; ${new Date().getFullYear()} TEFA Catalog System. All rights reserved.</p>
+          <p style="font-size: 12px; color: #aaa; text-align: center;">&copy; ${new Date().getFullYear()} StudentHub. All rights reserved.</p>
         </div>
       `,
     };

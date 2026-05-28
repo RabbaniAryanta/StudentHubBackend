@@ -1,12 +1,19 @@
 import { Controller, Get, Post, Body, Param, Patch, Delete, UseGuards, Request } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { Prisma } from '@prisma/client';
 import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard, Role } from '../helper/roles-guard';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+
 
 @Controller('users')
 export class UsersController {
 	constructor(private readonly usersService: UsersService) {}
+
+	@Post()
+	create(@Body() createUserDto: CreateUserDto) {
+		return this.usersService.create(createUserDto);
+	}
 
 	@Get('me')
 	@UseGuards(AuthGuard)
@@ -16,7 +23,7 @@ export class UsersController {
 
 	@Patch('me')
 	@UseGuards(AuthGuard)
-	updateProfile(@Request() req: any, @Body() updateUserDto: Prisma.UserUncheckedUpdateInput) {
+	updateProfile(@Request() req: any, @Body() updateUserDto: UpdateUserDto) {
 		return this.usersService.update(req.user.sub, updateUserDto);
 	}
 
@@ -37,7 +44,7 @@ export class UsersController {
 	@Patch(':id')
 	@UseGuards(AuthGuard, RolesGuard)
 	@Role('ADMIN')
-	update(@Param('id') id: string, @Body() updateUserDto: Prisma.UserUncheckedUpdateInput) {
+	update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
 		return this.usersService.update(+id, updateUserDto);
 	}
 

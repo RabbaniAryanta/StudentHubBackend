@@ -2,7 +2,9 @@ import { Controller, UseGuards, Get, Post, Body, Param, Patch, Delete } from '@n
 import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard, Role } from '../helper/roles-guard';
 import { OrdersService } from './orders.service';
-import { Prisma } from '@prisma/client';
+import { CreateOrderDto } from './dto/create-orders.dto';
+import { UpdateOrderDto } from './dto/update-orders.dto';
+
 
 @Controller('orders')
 export class OrdersController {
@@ -10,7 +12,7 @@ export class OrdersController {
 
 	@UseGuards(AuthGuard)
   @Post()
-	create(@Body() createOrderDto: Prisma.OrderUncheckedCreateInput) {
+	create(@Body() createOrderDto: CreateOrderDto) {
 		return this.ordersService.create(createOrderDto);
 	}
 
@@ -31,7 +33,7 @@ export class OrdersController {
 	@UseGuards(AuthGuard, RolesGuard)
   @Role('ADMIN')
   @Patch(':id')
-	update(@Param('id') id: string, @Body() updateOrderDto: Prisma.OrderUncheckedUpdateInput) {
+	update(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto) {
 		return this.ordersService.update(+id, updateOrderDto);
 	}
 

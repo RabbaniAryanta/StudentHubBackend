@@ -1,13 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import { CreateRatingDto } from './dto/create-ratings.dto';
+import { UpdateRatingDto } from './dto/update-ratings.dto';
+
 
 @Injectable()
 export class RatingsService {
 	constructor(private readonly prisma: PrismaService) {}
 
-	async create(data: Prisma.RatingUncheckedCreateInput) {
-		return this.prisma.rating.create({ data });
+	async create(data: CreateRatingDto) {
+		return this.prisma.rating.create({ data: data as Prisma.RatingUncheckedCreateInput });
 	}
 
 	async findAll() {
@@ -24,7 +27,7 @@ export class RatingsService {
 		return rating;
 	}
 
-	async update(id: number, data: Prisma.RatingUncheckedUpdateInput) {
+	async update(id: number, data: UpdateRatingDto) {
 		return this.prisma.rating.update({ where: { id }, data });
 	}
 

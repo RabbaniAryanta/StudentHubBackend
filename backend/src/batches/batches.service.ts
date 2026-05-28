@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { CreateBatchDto } from './dto/create-batches.dto';
+import { UpdateBatchDto } from './dto/update-batches.dto';
+
 
 @Injectable()
 export class BatchesService {
 	constructor(private readonly prisma: PrismaService) {}
 
-	async create(data: Prisma.BatchCreateInput) {
+	async create(data: CreateBatchDto) {
 		return this.prisma.batch.create({ data });
 	}
 
@@ -24,7 +26,7 @@ export class BatchesService {
 		return batch;
 	}
 
-	async update(id: number, data: Prisma.BatchUpdateInput) {
+	async update(id: number, data: UpdateBatchDto) {
 		return this.prisma.batch.update({ where: { id }, data });
 	}
 

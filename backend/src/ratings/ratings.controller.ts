@@ -2,7 +2,9 @@ import { Controller, UseGuards, Get, Post, Body, Param, Patch, Delete } from '@n
 import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard, Role } from '../helper/roles-guard';
 import { RatingsService } from './ratings.service';
-import { Prisma } from '@prisma/client';
+import { CreateRatingDto } from './dto/create-ratings.dto';
+import { UpdateRatingDto } from './dto/update-ratings.dto';
+
 
 @UseGuards(AuthGuard)
 @Controller('ratings')
@@ -10,7 +12,7 @@ export class RatingsController {
 	constructor(private readonly ratingsService: RatingsService) {}
 
 	@Post()
-	create(@Body() createRatingDto: Prisma.RatingUncheckedCreateInput) {
+	create(@Body() createRatingDto: CreateRatingDto) {
 		return this.ratingsService.create(createRatingDto);
 	}
 
@@ -25,7 +27,7 @@ export class RatingsController {
 	}
 
 	@Patch(':id')
-	update(@Param('id') id: string, @Body() updateRatingDto: Prisma.RatingUncheckedUpdateInput) {
+	update(@Param('id') id: string, @Body() updateRatingDto: UpdateRatingDto) {
 		return this.ratingsService.update(+id, updateRatingDto);
 	}
 

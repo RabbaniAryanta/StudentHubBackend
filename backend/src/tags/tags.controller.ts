@@ -2,16 +2,18 @@ import { Controller, UseGuards, Get, Post, Body, Param, Patch, Delete } from '@n
 import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard, Role } from '../helper/roles-guard';
 import { TagsService } from './tags.service';
-import { Prisma } from '@prisma/client';
+import { CreateTagDto } from './dto/create-tags.dto';
+import { UpdateTagDto } from './dto/update-tags.dto';
+
 
 @Controller('tags')
 export class TagsController {
-	constructor(private readonly tagsService: TagsService) {}
+	constructor(private readonly tagsService: TagsService) { }
 
 	@UseGuards(AuthGuard, RolesGuard)
-  @Role('ADMIN')
-  @Post()
-	create(@Body() createTagDto: Prisma.TagCreateInput) {
+	@Role('ADMIN')
+	@Post()
+	create(@Body() createTagDto: CreateTagDto) {
 		return this.tagsService.create(createTagDto);
 	}
 
@@ -26,15 +28,15 @@ export class TagsController {
 	}
 
 	@UseGuards(AuthGuard, RolesGuard)
-  @Role('ADMIN')
-  @Patch(':id')
-	update(@Param('id') id: string, @Body() updateTagDto: Prisma.TagUpdateInput) {
+	@Role('ADMIN')
+	@Patch(':id')
+	update(@Param('id') id: string, @Body() updateTagDto: UpdateTagDto) {
 		return this.tagsService.update(+id, updateTagDto);
 	}
 
 	@UseGuards(AuthGuard, RolesGuard)
-  @Role('ADMIN')
-  @Delete(':id')
+	@Role('ADMIN')
+	@Delete(':id')
 	remove(@Param('id') id: string) {
 		return this.tagsService.remove(+id);
 	}

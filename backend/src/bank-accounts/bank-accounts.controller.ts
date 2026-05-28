@@ -2,7 +2,9 @@ import { Controller, UseGuards, Get, Post, Body, Patch, Param, Delete } from '@n
 import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard, Role } from '../helper/roles-guard';
 import { BankAccountsService } from './bank-accounts.service';
-import { Prisma } from '@prisma/client';
+import { CreateBankAccountDto } from './dto/create-bank-account.dto';
+import { UpdateBankAccountDto } from './dto/update-bank-account.dto';
+
 
 @Controller('bank-accounts')
 export class BankAccountsController {
@@ -11,7 +13,7 @@ export class BankAccountsController {
   @UseGuards(AuthGuard, RolesGuard)
   @Role('ADMIN')
   @Post()
-  create(@Body() createBankAccountDto: Prisma.BankAccountCreateInput) {
+  create(@Body() createBankAccountDto: CreateBankAccountDto) {
     return this.bankAccountsService.create(createBankAccountDto);
   }
 
@@ -30,7 +32,7 @@ export class BankAccountsController {
   @UseGuards(AuthGuard, RolesGuard)
   @Role('ADMIN')
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateBankAccountDto: Prisma.BankAccountUpdateInput) {
+  update(@Param('id') id: string, @Body() updateBankAccountDto: UpdateBankAccountDto) {
     return this.bankAccountsService.update(+id, updateBankAccountDto);
   }
 

@@ -1,10 +1,11 @@
+import { AuthModule } from '../auth/auth.module';
 import { Module } from '@nestjs/common';
 import { WishlistsController } from './wishlists.controller';
 import { WishlistsService } from './wishlists.service';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, AuthModule],
   controllers: [WishlistsController],
   providers: [WishlistsService]
 })

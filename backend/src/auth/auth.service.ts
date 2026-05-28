@@ -4,7 +4,8 @@ import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { CreateUserDto } from '../users/dto/create-user.dto';
+
 
 @Injectable()
 export class AuthService {
@@ -15,7 +16,7 @@ export class AuthService {
     private prisma: PrismaService,
   ) {}
 
-  async signUp(data: Prisma.UserUncheckedCreateInput) {
+  async signUp(data: CreateUserDto) {
     const user = await this.userService.create(data);
     return {
       message: 'Registrasi berhasil. Silakan login.',
