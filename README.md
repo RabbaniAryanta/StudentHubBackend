@@ -1,161 +1,82 @@
-# Web Katalog — Dokumentasi Fitur, Skema Prisma & Flow per Role
+# StudentHub Backend — Dokumentasi API, Fitur & Hak Akses
 
-Dokumen ini menjelaskan fitur backend, skema data (langsung dari `prisma/schema.prisma`), daftar endpoint utama, serta pembagian aksi untuk publik, user, dan admin. Ditujukan supaya tim frontend dapat merencanakan UI, props, dan integrasi API.
+Dokumen ini menjelaskan keseluruhan arsitektur backend, rincian fungsionalitas tiap modul, daftar *endpoint* utama, dan pembagian hak akses (Role-Based Access Control) untuk Publik, User, dan Admin.
 
-Repository reference: [backend/prisma/schema.prisma](backend/prisma/schema.prisma)
+> Repository reference: [backend/prisma/schema.prisma](backend/prisma/schema.prisma)
 
-## Ringkasan singkat
-- Autentikasi: register, verify OTP, login
-- Konten katalog: `projects` (status: DRAFT / PUBLISHED / ARCHIVED), slug-based detail
-- Manajemen data: categories, tags, majors, batches, students, bank accounts
-- Interaksi pengguna: wishlists, ratings, cart/order, contacts (publik)
+---
 
-## Skema Prisma (model & atribut)
-Berikut adalah skema persis dari `backend/prisma/schema.prisma` (model → field : tipe):
+## 1. Skema Basis Data & Konsep Relasi Utama
+Struktur database telah disesuaikan agar berjalan independen dengan pemisahan entitas yang jelas:
 
-- Role (enum): `USER`, `ADMIN`
+- **Auth & Users**: `User` dan `OtpCode` menangani otentikasi. Akun `User` diperuntukkan murni sebagai akun *login* untuk konsumen/pembeli.
+- **Students Management (Admin Only)**: `Student`, `Major`, `Batch`. **Penting:** Entitas `Student` tidak memiliki relasi dengan akun `User`. Data siswa adalah *master data* yang sepenuhnya di-input dan dikelola oleh Admin.
+- **Katalog & Project**: `Project`, `Category`, `Tag`, `ProjectTag`. Setiap Project terkait dengan satu `Category`, beberapa `Tag`, dan opsional terkait dengan satu `Student` (sebagai pemilik karya).
+- **Transaksi**: `Cart`, `CartItem`, `Order`, `OrderItem`, `PaymentProof`, `BankAccount`.
+- **Interaksi**: `Wishlist`, `Rating`, `Contact` (untuk form hubungi kami).
 
-- User:
-  - `id: Int` (PK)
-  - `email: String` (unique)
-  - `password: String`
-  - `name: String`
-  - `phone: String?`
-  - `avatarUrl: String?`
-  - `role: Role` (default USER)
-  - `createdAt: DateTime`
-  - `updatedAt: DateTime`
-  - `isTwoFactorEnabled: Boolean`
+---
 
-- OtpCode:
-  - `id, email, code, expiresAt, used, attempts, createdAt`
+## 2. Pembagian Hak Akses & Workflow Fitur
 
-- Major:
-  - `id, name` (unique)
+Aplikasi ini membagi hak akses ke dalam 3 level utama:
 
-- Batch:
-  - `id, year` (unique)
+### 🌐 A. Akses Publik (Visitor / Belum Login)
+Pengunjung yang belum mendaftar/login hanya memiliki akses *Read-Only* ke bagian katalog dan fitur publik dasar.
+- **Katalog**:
+  - `GET /projects` — Menampilkan daftar project yang berstatus **PUBLISHED** saja.
+  - `GET /projects/:slugOrId` — Menampilkan detail project spesifik (selama berstatus PUBLISHED).
+  - `GET /categories` & `GET /tags` — Menampilkan filter katalog.
+- **Auth**: `POST /auth/register`, `POST /auth/verify-otp`, `POST /auth/login`.
+- **Contact**: `POST /contacts` — Mengirim pesan atau *inquiry* kepada admin.
 
-- Student:
-  - `id, nis` (unique), `userId` (unique), `majorId`, `batchId`
-  - relasi: `user`, `major`, `batch`, `projects[]`
+### 👤 B. Akses Authenticated User (`Role: USER`)
+Pengguna yang sudah login dan melampirkan token `Authorization: Bearer <token>` bisa melakukan aktivitas transaksi dan interaksi.
+- **Akun**: `GET /users/me`, `PATCH /users/me` — Mengelola profil sendiri.
+- **Katalog & Interaksi**:
+  - `POST /wishlists` — Melakukan *toggle* (Tambah/Hapus) project ke daftar *wishlist*. (Otomatis menambah/mengurangi `wishlistCount` pada project).
+  - `GET /wishlists/my-wishlist` — Melihat daftar wishlist sendiri.
+  - `POST /ratings` — Memberikan rating dan *review* pada project. (Otomatis menghitung ulang `averageRating` pada project).
+- **Transaksi & Keranjang**:
+  - `POST /carts`, `DELETE /carts/:projectId`, `GET /carts/my-cart` — Mengelola keranjang belanja.
+  - `POST /orders/checkout` — Melakukan *checkout* dari semua *item* yang ada di keranjang menjadi satu nomor *Order* (`orderCode`), lalu keranjang akan dikosongkan otomatis.
+- **Pembayaran**:
+  - `GET /bank-accounts` & `GET /bank-accounts/active` & `GET /bank-accounts/:id` — Melihat daftar rekening resmi admin untuk tujuan transfer.
+  - `GET /payment/bill/:orderId` — Mengecek rincian tagihan pesanan.
+  - `POST /payment/upload-proof/:orderId` — Mengunggah gambar bukti transfer.
+  - `GET /payment/proof/:orderId` — Melihat bukti transfer yang sudah di-upload.
 
-- Category:
-  - `id, name` (unique), `slug` (unique)
+### 👑 C. Akses Admin (`Role: ADMIN`)
+Admin memiliki kontrol penuh atas seluruh sistem dan *master data*. Endpoint admin dilindungi dengan `@UseGuards(AuthGuard, RolesGuard)` dan `@Role('ADMIN')`.
+- **Master Data Katalog**:
+  - `POST`, `PATCH`, `DELETE` untuk `/categories` dan `/tags`.
+  - `POST /projects` — Menambahkan project baru (otomatis berstatus `DRAFT`). Harus menggunakan `multipart/form-data` untuk upload `thumbnail` dan `mediaUrls`.
+  - `PATCH /projects/:id`, `DELETE /projects/:id`.
+  - `GET /projects/all/admin` — Melihat SEMUA project tanpa terkecuali.
+  - `GET /projects/:id` — Admin dapat menembus batasan dan melihat detail project meskipun statusnya masih `DRAFT`.
+- **Data Siswa & Akademik**:
+  - `POST`, `PATCH`, `DELETE` untuk `/majors`, `/batches`, dan `/students`. Admin mendaftarkan karya siswa dengan menyambungkan `studentId` ke dalam `Project`.
+- **Keuangan & Order**:
+  - `POST`, `PATCH`, `DELETE` untuk `/bank-accounts` (kelola rekening aktif).
+  - `GET /orders`, `PATCH /orders/:id` — Melihat semua pesanan dan mengubah status order.
+  - `PATCH /payment/verify/:id` — Memverifikasi bukti pembayaran user (misal set status jadi `APPROVED` atau `REJECTED`, dan memberikan `adminNote`).
+- **Lainnya**: Kelola `contacts` (inquiries), manajemen user.
 
-- Tag:
-  - `id, name` (unique)
+---
 
-- Decision: keep `Tag` model — used for filtering and related-projects.
-  - Use-case: frontend will use `GET /tags` to populate filters and `GET /projects?tagId=` to fetch projects by tag.
-  - Examples for tag requests/responses provided in `postman/examples/`.
+## 3. Catatan Standarisasi API Backend
 
-- Project:
-  - `id, title, slug` (unique), `description`
-  - `price: Decimal` (default 0.00)
-  - `thumbnail: String?`, `mediaUrls: Json` (array JSON)
-  - `status: ProjectStatus` (DRAFT|PUBLISHED|ARCHIVED)
-  - `averageRating: Decimal`, `totalReviews: Int`, `wishlistCount: Int`
-  - `createdAt, updatedAt`, `categoryId`, `studentId?`
+Dalam versi terbaru ini, backend StudentHub sudah menerapkan pola API yang terstandarisasi layaknya platform TEFA:
 
-- ProjectTag: composite PK (projectId, tagId)
-
-- Cart, CartItem: (user cart + items)
-
-- BankAccount: `bankName, accountNumber, accountOwner, isActive`
-
-- Order:
-  - `id, orderCode` (unique), `userId`, `totalPrice` (Decimal), `status` (OrderStatus enum)
-  - `message?`, `bankAccountId?`, timestamps
-  - relasi: `items[]`, `paymentProofs[]`
-
-- OrderItem: `projectName`, `price`, `thumbnail`, `quantity`
-
-- PaymentProof: `orderId, fileUrl, status (PaymentProofStatus), adminNote`
-
-- Contact:
-  - `id, name, email, phone?, message, status (ContactStatus), createdAt, updatedAt`
-
-- Rating:
-  - `id, userId, projectId, score (Int), comment?, createdAt` (unique per user+project)
-
-- Wishlist:
-  - `id, userId, projectId, createdAt` (unique per user+project)
-
-> Untuk detail tipe (Decimal precision, enums), lihat langsung [backend/prisma/schema.prisma](backend/prisma/schema.prisma).
-
-## Daftar endpoint utama & hak akses
-Catatan: controller di `backend/src` menentukan guards. Ringkasan terpenting:
-
-- Auth (`/auth`)
-  - `POST /auth/register` — register (validasi)
-  - `POST /auth/verify-otp` — verify OTP
-  - `POST /auth/login` — login → return token
-
-- Projects (`/projects`)
-  - `GET /projects` — publik, hanya projects PUBLISHED (`findAllPublished()`)
-  - `GET /projects/:slug` — publik, detail
-  - `POST /projects` — ADMIN only (file upload: `thumbnail`, `mediaUrls` via `multipart/form-data`)
-
-- Categories (`/categories`)
-  - `GET /categories`, `GET /categories/:id` — publik
-  - `POST`, `PATCH`, `DELETE` — ADMIN only
-
-- Tags (`/tags`)
-  - `GET /tags`, `GET /tags/:id` — publik
-  - `POST`, `PATCH`, `DELETE` — ADMIN only
-
-- Users (`/users`)
-  - `GET /users/me` — AUTH
-  - `PATCH /users/me` — AUTH
-  - `GET /users`, `GET /users/:id`, `PATCH /users/:id`, `DELETE /users/:id` — ADMIN only
-
-- Wishlists (`/wishlists`) — protected by `AuthGuard`
-  - `POST /wishlists` — create (kirim `userId`, `projectId`)
-  - `GET /wishlists`, `GET /wishlists/:id`, `PATCH /wishlists/:id`, `DELETE /wishlists/:id`
-
-- Ratings (`/ratings`) — protected by `AuthGuard`
-  - `POST /ratings` — create rating (unique per user+project)
-  - `GET /ratings`, `GET /ratings/:id`, `PATCH`, `DELETE`
-
-- Orders (`/orders`)
-  - `POST /orders` — AUTH (create order)
-  - `GET /orders`, `GET /orders/:id`, `PATCH /orders/:id`, `DELETE /orders/:id` — ADMIN only
-
-- Bank Accounts (`/bank-accounts`)
-  - `GET /bank-accounts`, `GET /bank-accounts/:id` — AUTH
-  - `POST`, `PATCH`, `DELETE` — ADMIN only
-
-- Contacts (`/contacts`)
-  - `POST /contacts` — publik (form contact / publik dapat mengirim message untuk admin)
-  - `GET /contacts`, `GET /contacts/:id`, `PATCH`, `DELETE` — ADMIN only
-
-- Majors (`/majors`), Batches (`/batches`), Students (`/students`)
-  - Controllers are guarded for ADMIN (create/read/update/delete)
-
-## Pembagian hak dan flow fitur (lebih rinci)
-
-1) Publik (visitor, tidak login)
-  - Bisa: lihat daftar project ter-publish (`GET /projects`), lihat detail project (`GET /projects/:slug`), lihat kategori/tag list, mengirim pesan melalui `POST /contacts` (mis. request upload project / kontak admin).
-  - Tidak bisa: menambahkan wishlist, memberi rating, membuat order, mengakses profil.
-
-2) Authenticated User (`role = USER`)
-  - Bisa: login/register/verify OTP, melihat & mengubah profil (`/users/me`), menambahkan/kelola wishlist, memberi rating pada project, membuat order (`POST /orders`), melihat bank account list (`GET /bank-accounts`), mengelola cart (jika frontend implement), melihat rating/wishlist miliknya.
-  - Catatan: semua operasi pengguna dikaitkan ke `userId` (token harus terkirim di header `Authorization: Bearer <token>`).
-
-3) Admin (`role = ADMIN`)
-  - Bisa semua aksi user plus manajemen penuh data: create/update/delete `projects` (upload media), categories, tags, majors, batches, students, bank accounts, orders (lihat dan ubah status), contacts (lihat & reply via admin note / status update), users (CRUD).
-  - Endpoint yang membutuhkan admin menggunakan `@UseGuards(AuthGuard, RolesGuard)` dan `@Role('ADMIN')` di controller.
-
-## Catatan penting untuk frontend
-- Project create: gunakan `multipart/form-data` dengan field names `thumbnail` (file) dan `mediaUrls` (array of files) bersama field JSON untuk metadata.
-- Rating unik per user+project — frontend harus mencegah duplicate UI submit.
-- Wishlist unique per user+project — toggling harus menangani unique constraint.
-- Contact form: gunakan `POST /contacts` sebagai mekanisme publik untuk meminta admin meng-upload project atau bertanya.
-
-## Next steps (opsional)
-- Saya bisa generate API reference lengkap (request/response contoh) dari controllers/service DTOs.
-- Saya juga bisa ekstrak relasi dan contoh JSON payload untuk tiap endpoint.
-
-Dokumen ini dibuat dengan membaca `backend/prisma/schema.prisma` dan controller di `backend/src`.
-File ini disimpan di root: [README.md](README.md)
+1. **Uniform Response Wrapper**: Semua endpoint memberikan respon dalam bentuk objek JSON seragam:
+   ```json
+   {
+     "success": true,
+     "message": "Pesan sukses (opsional)",
+     "data": { ... } // Payload data aktual
+   }
+   ```
+2. **Error Handling Terpadu**:
+   - Jika ada duplikasi data (Prisma Error `P2002`), backend mengembalikan HTTP `409 Conflict`.
+   - Jika data tidak ditemukan (Prisma Error `P2025`), backend mengembalikan HTTP `404 Not Found`.
+3. **Transaction Safety**: Fitur kritis seperti *Checkout* dan penghitungan ulang nilai *Rating / Wishlists* dibungkus dengan *Prisma Transaction* atau logic kalkulasi otomatis agar sinkronisasi data tetap terjaga.
