@@ -2,7 +2,7 @@
 
 Dokumen ini menjelaskan keseluruhan arsitektur backend, rincian fungsionalitas tiap modul, daftar *endpoint* utama, dan pembagian hak akses (Role-Based Access Control) untuk Publik, User, dan Admin.
 
-> Repository reference: [backend/prisma/schema.prisma](backend/prisma/schema.prisma)
+> Repository reference: [prisma/schema.prisma](prisma/schema.prisma)
 
 ---
 
