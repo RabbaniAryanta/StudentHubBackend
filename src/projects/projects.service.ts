@@ -47,6 +47,24 @@ export class ProjectsService {
       }
     }
 
+    let tagConnections: any = undefined;
+    if (data.tags !== undefined) {
+      try {
+        const parsed = typeof data.tags === 'string' ? JSON.parse(data.tags) : data.tags;
+        if (Array.isArray(parsed)) {
+          tagConnections = parsed.map((t: any) => ({ tagId: Number(t.id || t.tagId || t) }));
+        } else if (parsed) {
+          tagConnections = [{ tagId: Number(parsed) }];
+        }
+      } catch (e) {
+        if (data.tags) {
+          tagConnections = [{ tagId: parseInt(data.tags, 10) }];
+        }
+      }
+    }
+
+    const { tags, ...restData } = data;
+
     return this.prisma.project.create({
       data: {
         title: data.title,
@@ -58,10 +76,12 @@ export class ProjectsService {
         status: data.status || ProjectStatus.DRAFT,
         categoryId,
         ...(studentConnections && { students: { connect: studentConnections } }),
+        ...(tagConnections && { tags: { create: tagConnections } }),
       },
       include: {
         students: true,
         category: true,
+        tags: { include: { tag: true } }
       }
     });
   }
@@ -74,6 +94,7 @@ export class ProjectsService {
       include: {
         category: true,
         students: true,
+        tags: { include: { tag: true } }
       },
     });
   }
@@ -84,6 +105,7 @@ export class ProjectsService {
       include: {
         category: true,
         students: true,
+        tags: { include: { tag: true } }
       },
     });
 
@@ -104,6 +126,7 @@ export class ProjectsService {
             batch: true
           }
         },
+        tags: { include: { tag: true } }
       },
     });
   }
@@ -119,6 +142,7 @@ export class ProjectsService {
             batch: true
           }
         },
+        tags: { include: { tag: true } }
       },
     });
     if (!project) throw new NotFoundException(`Project with id ${id} not found`);
@@ -176,12 +200,34 @@ export class ProjectsService {
     
     if (data.price) updateData.price = parseFloat(data.price);
 
+    if (data.tags !== undefined) {
+      let tagConnections: any[] = [];
+      try {
+        const parsed = typeof data.tags === 'string' ? JSON.parse(data.tags) : data.tags;
+        if (Array.isArray(parsed)) {
+          tagConnections = parsed.map((t: any) => ({ tagId: Number(t.id || t.tagId || t) }));
+        } else if (parsed) {
+          tagConnections = [{ tagId: Number(parsed) }];
+        }
+      } catch (e) {
+        if (data.tags) {
+          tagConnections = [{ tagId: parseInt(data.tags, 10) }];
+        }
+      }
+      
+      updateData.tags = {
+        deleteMany: {},
+        create: tagConnections
+      };
+    }
+
     return this.prisma.project.update({
       where: { id },
       data: updateData,
       include: {
         students: true,
         category: true,
+        tags: { include: { tag: true } }
       }
     });
   }
