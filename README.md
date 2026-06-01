@@ -66,7 +66,7 @@ Admin memiliki kontrol penuh atas seluruh sistem dan *master data*. Endpoint adm
 
 ## 3. Catatan Standarisasi API Backend
 
-Dalam versi terbaru ini, backend StudentHub sudah menerapkan pola API yang terstandarisasi layaknya platform TEFA:
+Dalam versi terbaru ini, backend StudentHub sudah menerapkan pola API yang terstandarisasi Response JSON
 
 1. **Uniform Response Wrapper**: Semua endpoint memberikan respon dalam bentuk objek JSON seragam:
    ```json
