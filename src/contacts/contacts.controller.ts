@@ -11,14 +11,12 @@ import { RolesGuard, Role } from '../helper/roles-guard';
 export class ContactsController {
   constructor(private readonly contactsService: ContactsService) {}
 
-  // POST: Terbuka untuk umum (publik) agar tamu di website bisa kirim pesan
   @Post()
   @UsePipes(new ValidationPipe({ exceptionFactory: FormatValidation }))
   create(@Body() createContactDto: CreateContactDto) {
     return this.contactsService.create(createContactDto);
   }
 
-  // Mulai dari sini ke bawah, hanya ADMIN yang boleh akses
   @Get()
   @UseGuards(AuthGuard, RolesGuard)
   @Role('ADMIN')

@@ -3,15 +3,15 @@ import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 export class CreateOrderDto {
   @IsString()
   @IsNotEmpty()
-  orderCode: string;
+  orderCode!: string;
 
   @IsNumber()
   @IsNotEmpty()
-  userId: number;
+  userId!: number;
 
   @IsNumber()
   @IsNotEmpty()
-  totalPrice: number;
+  totalPrice!: number;
 
   @IsString()
   @IsOptional()

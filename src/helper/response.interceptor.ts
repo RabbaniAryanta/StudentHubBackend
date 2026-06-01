@@ -9,7 +9,6 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
     const response = ctx.getResponse();
     const statusCode = response.statusCode;
 
-    // Tentukan message default berdasarkan method HTTP kalau memungkinkan
     let message = 'Data berhasil diproses';
     if (context.switchToHttp().getRequest().method === 'GET') {
       message = 'Data berhasil diambil';
@@ -23,7 +22,6 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
 
     return next.handle().pipe(
       map(data => {
-        // Jika data sudah mempunyai format ini (contoh dari controller ngasih custom message), biarkan saja
         if (data && typeof data === 'object' && 'code' in data && 'status' in data && 'message' in data) {
           return data;
         }
@@ -31,7 +29,7 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
         return {
           code: statusCode,
           status: 'success',
-          message: data?.message || message, // jika data meng-override message
+          message: data?.message || message,
           data: data?.message && Object.keys(data).length === 1 ? null : (data?.data ?? data),
         };
       }),

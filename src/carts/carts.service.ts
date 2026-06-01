@@ -5,7 +5,6 @@ import { PrismaService } from '../prisma/prisma.service';
 export class CartsService {
   constructor(private prisma: PrismaService) { }
 
-  // Ambil cart user aktif, jika belum ada, buatkan otomatis
   async getCart(userId: number) {
     let cart = await this.prisma.cart.findUnique({
       where: { userId },
@@ -41,7 +40,6 @@ export class CartsService {
     return cart;
   }
 
-  // Tambahkan item ke cart
   async addItem(userId: number, projectId: number, quantity: number = 1) {
     const project = await this.prisma.project.findUnique({ where: { id: projectId } });
     if (!project) throw new NotFoundException('Project not found');
@@ -70,7 +68,6 @@ export class CartsService {
     }
   }
 
-  // Hapus item dari cart
   async removeItem(userId: number, projectId: number) {
     const cart = await this.getCart(userId);
     const existingItem = await this.prisma.cartItem.findUnique({
@@ -88,7 +85,6 @@ export class CartsService {
     });
   }
 
-  // Kosongkan cart (Hapus isi, biarkan cart induk)
   async clearCart(userId: number) {
     const cart = await this.getCart(userId);
     return await this.prisma.cartItem.deleteMany({

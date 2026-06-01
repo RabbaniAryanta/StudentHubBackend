@@ -29,7 +29,7 @@ export class ContactsService {
   }
 
   async update(id: number, updateContactDto: UpdateContactDto) {
-    await this.findOne(id); // Ngecek id exist atau tidak
+    await this.findOne(id);
     
     return await this.prisma.contact.update({
       where: { id: Number(id) },
@@ -38,7 +38,7 @@ export class ContactsService {
   }
 
   async remove(id: number) {
-    await this.findOne(id); // Ngecek id exist atau tidak
+    await this.findOne(id);
     
     return await this.prisma.contact.delete({
       where: { id: Number(id) },

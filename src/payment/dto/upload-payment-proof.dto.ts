@@ -1,3 +1,3 @@
 export class UploadPaymentProofDto {
-  orderId: number;
+  orderId!: number;
 }

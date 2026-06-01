@@ -3,15 +3,15 @@ import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 export class CreateRatingDto {
   @IsNumber()
   @IsNotEmpty()
-  userId: number;
+  userId!: number;
 
   @IsNumber()
   @IsNotEmpty()
-  projectId: number;
+  projectId!: number;
 
   @IsNumber()
   @IsNotEmpty()
-  score: number;
+  score!: number;
 
   @IsString()
   @IsOptional()

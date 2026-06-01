@@ -17,4 +17,4 @@ export class CloudinaryService {
       Readable.from(file.buffer).pipe(uploadStream);
     });
   }
-} 
+}

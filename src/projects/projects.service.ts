@@ -14,13 +14,11 @@ export class ProjectsService {
     let thumbnailUrl = null;
     let mediaUrls: string[] = [];
     
-    // Upload thumbnail
     if (files.thumbnail && files.thumbnail.length > 0) {
       const result = await this.cloudinaryService.uploadImage(files.thumbnail[0]);
       thumbnailUrl = result.secure_url;
     }
 
-    // Upload mediaUrls
     if (files.mediaUrls && files.mediaUrls.length > 0) {
       for (const file of files.mediaUrls) {
         const result = await this.cloudinaryService.uploadImage(file);
@@ -28,15 +26,26 @@ export class ProjectsService {
       }
     }
 
-    // Generate a simple slug
     const baseSlug = data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const slug = `${baseSlug}-${Date.now()}`;
 
     const categoryId = parseInt(data.categoryId, 10);
-    // Since only admins or system creates projects for students via contact for now,
-    // let's just map studentId if provided or just create the project.
-    const studentId = data.studentId ? parseInt(data.studentId, 10) : undefined;
     const price = data.price ? parseFloat(data.price) : 0;
+
+    const studentInput = data.studentId || data.students;
+    let studentConnections: any = undefined;
+    if (studentInput) {
+      try {
+        const parsed = typeof studentInput === 'string' ? JSON.parse(studentInput) : studentInput;
+        if (Array.isArray(parsed)) {
+          studentConnections = parsed.map((s: any) => ({ id: Number(s.id || s) }));
+        } else {
+          studentConnections = [{ id: Number(studentInput) }];
+        }
+      } catch (e) {
+        studentConnections = [{ id: parseInt(studentInput, 10) }];
+      }
+    }
 
     return this.prisma.project.create({
       data: {
@@ -48,8 +57,12 @@ export class ProjectsService {
         mediaUrls: mediaUrls,
         status: data.status || ProjectStatus.DRAFT,
         categoryId,
-        ...(studentId && { studentId }),
+        ...(studentConnections && { students: { connect: studentConnections } }),
       },
+      include: {
+        students: true,
+        category: true,
+      }
     });
   }
 
@@ -60,11 +73,7 @@ export class ProjectsService {
       },
       include: {
         category: true,
-        student: {
-          include: {
-            
-          },
-        },
+        students: true,
       },
     });
   }
@@ -74,11 +83,7 @@ export class ProjectsService {
       where: { slug },
       include: {
         category: true,
-        student: {
-          include: {
-            
-          },
-        },
+        students: true,
       },
     });
 
@@ -93,7 +98,7 @@ export class ProjectsService {
     return this.prisma.project.findMany({
       include: {
         category: true,
-        student: {
+        students: {
           include: {
             major: true,
             batch: true
@@ -108,7 +113,7 @@ export class ProjectsService {
       where: { id },
       include: {
         category: true,
-        student: {
+        students: {
           include: {
             major: true,
             batch: true
@@ -143,17 +148,41 @@ export class ProjectsService {
       thumbnail: thumbnailUrl,
     };
     
+    // Hapus key yang bisa bikin error dari spread operator (FormData biasanya mengirim string)
+    delete updateData.studentId;
+    delete updateData.students;
+    
     if (mediaUrls) {
       updateData.mediaUrls = mediaUrls;
     }
     
     if (data.categoryId) updateData.categoryId = parseInt(data.categoryId, 10);
-    if (data.studentId) updateData.studentId = parseInt(data.studentId, 10);
+    
+    const studentInput = data.studentId || data.students;
+    if (studentInput) {
+      let studentConnections: any;
+      try {
+        const parsed = typeof studentInput === 'string' ? JSON.parse(studentInput) : studentInput;
+        if (Array.isArray(parsed)) {
+          studentConnections = parsed.map((s: any) => ({ id: Number(s.id || s) }));
+        } else {
+          studentConnections = [{ id: Number(studentInput) }];
+        }
+      } catch (e) {
+        studentConnections = [{ id: parseInt(studentInput, 10) }];
+      }
+      updateData.students = { set: studentConnections };
+    }
+    
     if (data.price) updateData.price = parseFloat(data.price);
 
     return this.prisma.project.update({
       where: { id },
       data: updateData,
+      include: {
+        students: true,
+        category: true,
+      }
     });
   }
 

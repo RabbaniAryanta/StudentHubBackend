@@ -54,9 +54,9 @@ export class ProjectsController {
     try {
       let result;
       if (!isNaN(Number(slugOrId))) {
-         result = await this.projectsService.findOne(Number(slugOrId));
+        result = await this.projectsService.findOne(Number(slugOrId));
       } else {
-         result = await this.projectsService.findBySlug(slugOrId);
+        result = await this.projectsService.findBySlug(slugOrId);
       }
       
       // Check status

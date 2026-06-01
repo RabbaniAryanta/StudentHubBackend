@@ -30,7 +30,6 @@ export class PaymentService {
   }
 
   async uploadPaymentProof(orderId: number, file: Express.Multer.File) {
-    // Cek apakah order ada dan statusnya PENDING_PAYMENT
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
     });
@@ -45,13 +44,11 @@ export class PaymentService {
       );
     }
 
-    // Upload file ke Cloudinary
     const uploadResult = await this.cloudinaryService.uploadImage(
       file,
       'payment-proofs',
     );
 
-    // Simpan PaymentProof ke database
     const paymentProof = await this.prisma.paymentProof.create({
       data: {
         orderId,
@@ -59,7 +56,6 @@ export class PaymentService {
       },
     });
 
-    // Update status order ke WAITING_VERIFICATION
     await this.prisma.order.update({
       where: { id: orderId },
       data: { status: 'WAITING_VERIFICATION' },
@@ -88,7 +84,6 @@ export class PaymentService {
       throw new BadRequestException('Payment proof not found');
     }
 
-    // Update status payment proof
     const updatedProof = await this.prisma.paymentProof.update({
       where: { id: paymentProofId },
       data: {
@@ -97,14 +92,13 @@ export class PaymentService {
       },
     });
 
-    // Jika payment approved, update order status menjadi PAID
     if (verifyDto.status === 'APPROVED') {
       await this.prisma.order.update({
         where: { id: paymentProof.orderId },
         data: { status: 'PAID' },
       });
     } else if (verifyDto.status === 'REJECTED') {
-       await this.prisma.order.update({
+      await this.prisma.order.update({
         where: { id: paymentProof.orderId },
         data: { status: 'REJECTED' },
       });

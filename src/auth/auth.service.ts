@@ -35,16 +35,13 @@ export class AuthService {
     const isMatch = await bcrypt.compare(pass, user.password);
     if (!isMatch) throw new UnauthorizedException('Email atau password salah.');
 
-    // Jika 2FA aktif, generate OTP dan jangan kirim token dulu
     if (user.isTwoFactorEnabled) {
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
       const expiresAt = new Date();
-      expiresAt.setMinutes(expiresAt.getMinutes() + 5); // 5 menit expired
+      expiresAt.setMinutes(expiresAt.getMinutes() + 5);
 
-      // Hapus OTP lama jika ada agar tidak menumpuk
       await this.prisma.otpCode.deleteMany({ where: { email } });
 
-      // Simpan OTP baru
       await this.prisma.otpCode.create({
         data: {
           email,
@@ -53,7 +50,6 @@ export class AuthService {
         },
       });
 
-      // Kirim email
       await this.mailService.sendOtp(email, otp);
 
       return {
@@ -62,7 +58,6 @@ export class AuthService {
       };
     }
 
-    // Jika 2FA tidak aktif, langsung kirim token
     const payload = { sub: user.id, email: user.email, role: user.role };
     return {
       access_token: await this.jwtService.signAsync(payload),
@@ -81,19 +76,16 @@ export class AuthService {
       throw new BadRequestException('Kode OTP tidak ditemukan atau sudah kedaluwarsa.');
     }
 
-    // Cek batas percobaan
     if (otpRecord.attempts >= 3) {
       await this.prisma.otpCode.delete({ where: { id: otpRecord.id } });
       throw new BadRequestException('Batas percobaan terlampaui. Silakan login kembali.');
     }
 
-    // Cek kadaluarsa
     if (new Date() > otpRecord.expiresAt) {
       await this.prisma.otpCode.delete({ where: { id: otpRecord.id } });
       throw new BadRequestException('Kode OTP sudah kedaluwarsa.');
     }
 
-    // Cek kode
     if (otpRecord.code !== code) {
       await this.prisma.otpCode.update({
         where: { id: otpRecord.id },
@@ -102,7 +94,6 @@ export class AuthService {
       throw new BadRequestException(`Kode OTP salah. Sisa percobaan: ${2 - otpRecord.attempts}`);
     }
 
-    // Jika benar, hapus OTP dan kirim token
     await this.prisma.otpCode.delete({ where: { id: otpRecord.id } });
 
     const payload = { sub: user.id, email: user.email, role: user.role };

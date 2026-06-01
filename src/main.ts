@@ -10,14 +10,13 @@ async function bootstrap() {
   app.useGlobalFilters(new GlobalExceptionFilter());
   app.useGlobalInterceptors(new ResponseInterceptor());
 
-  // Setup Global Validation Pipe & Formatting
   app.useGlobalPipes(new ValidationPipe({
-    whitelist: true, // Hapus payload properti yang tidak ada di DTO
-    forbidNonWhitelisted: true, // Error jika ada payload asing
-    transform: true, // Otomatis cast payload berdasarkan tipe DTO
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
   }));
 
-  app.enableCors(); // Aktifkan CORS (opsional namun esensial untuk frontend integrasi)
+  app.enableCors(); 
   
   await app.listen(process.env.PORT ?? 3000);
 }

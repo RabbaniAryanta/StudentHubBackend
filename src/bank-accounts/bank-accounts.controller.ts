@@ -17,7 +17,6 @@ export class BankAccountsController {
     return this.bankAccountsService.create(createBankAccountDto);
   }
 
-  // Active banks only for public/users
   @UseGuards(AuthGuard)
   @Get('active')
   findActive() {

@@ -3,17 +3,17 @@ import { IsNotEmpty, IsString, IsInt } from 'class-validator';
 export class CreateStudentDto {
   @IsString()
   @IsNotEmpty()
-  nis: string;
+  nis!: string;
 
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @IsInt()
   @IsNotEmpty()
-  majorId: number;
+  majorId!: number;
 
   @IsInt()
   @IsNotEmpty()
-  batchId: number;
+  batchId!: number;
 }

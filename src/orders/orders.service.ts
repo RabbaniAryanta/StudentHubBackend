@@ -10,7 +10,6 @@ export class OrdersService {
   async checkout(userId: number, data: any) {
     if (!data.bankAccountId) throw new BadRequestException('bankAccountId is required');
 
-    // 1. Ambil cart dan user data
     const cart = await this.prisma.cart.findUnique({
       where: { userId: Number(userId) },
       include: { items: { include: { project: true } }, user: true }
@@ -28,7 +27,6 @@ export class OrdersService {
       throw new BadRequestException('User not found.');
     }
 
-    // 2. Hitung harga dan persiapkan OrderItem
     let totalPrice = 0;
     const orderItemsPayload = cart.items.map(item => {
       const price = Number(item.project.price);
@@ -43,10 +41,8 @@ export class OrdersService {
       };
     });
 
-    // 3. Generate Order Code acak
     const orderCode = `ORD-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    // 4. Lakukan Transaksi (Buat order + Hapus isi keranjang)
     const result = await this.prisma.$transaction(async (tx) => {
       const order = await tx.order.create({
         data: {
@@ -63,7 +59,6 @@ export class OrdersService {
         include: { items: true, bankAccount: true }
       });
 
-      // Kosongkan keranjang setelah checkout
       await tx.cartItem.deleteMany({
         where: { cartId: cart.id }
       });

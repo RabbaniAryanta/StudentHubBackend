@@ -5,5 +5,5 @@ export class CreatePaymentDto {
   @IsNotEmpty()
   @IsInt()
   @Type(() => Number)
-  orderId: number;
+  orderId!: number;
 }
