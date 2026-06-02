@@ -1,4 +1,5 @@
 import { Controller, UseGuards, Get, Post, Body, Param, Patch, Delete , HttpException, HttpStatus } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard, Role } from '../helper/roles-guard';
 import { TagsService } from './tags.service';
@@ -6,11 +7,15 @@ import { CreateTagDto } from './dto/create-tags.dto';
 import { UpdateTagDto } from './dto/update-tags.dto';
 
 
+@ApiTags('Tags')
 @Controller('tags')
 export class TagsController {
 	constructor(private readonly tagsService: TagsService) { }
 
   @Post()
+  @ApiOperation({ summary: 'Membuat tag baru' })
+  @ApiResponse({ status: 201, description: 'Tag berhasil dibuat.' })
+  @ApiResponse({ status: 409, description: 'Tag sudah terdaftar.' })
   async create(@Body() createDto: CreateTagDto) {
     try {
       const result = await this.tagsService.create(createDto);
@@ -24,6 +29,8 @@ export class TagsController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Mengambil daftar tag' })
+  @ApiResponse({ status: 200, description: 'Daftar tag berhasil diambil.' })
   async findAll() {
     try {
       const result = await this.tagsService.findAll();
@@ -34,6 +41,9 @@ export class TagsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Mengambil detail tag berdasarkan ID' })
+  @ApiResponse({ status: 200, description: 'Tag berhasil diambil.' })
+  @ApiResponse({ status: 404, description: 'Tag tidak ditemukan.' })
   async findOne(@Param('id') id: string) {
     try {
       const result = await this.tagsService.findOne(+id);
@@ -48,6 +58,9 @@ export class TagsController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Memperbarui tag berdasarkan ID' })
+  @ApiResponse({ status: 200, description: 'Tag berhasil diperbarui.' })
+  @ApiResponse({ status: 404, description: 'Tag tidak ditemukan.' })
   async update(@Param('id') id: string, @Body() updateDto: UpdateTagDto) {
     try {
       const result = await this.tagsService.update(+id, updateDto);
@@ -64,6 +77,9 @@ export class TagsController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Menghapus tag berdasarkan ID' })
+  @ApiResponse({ status: 200, description: 'Tag berhasil dihapus.' })
+  @ApiResponse({ status: 404, description: 'Tag tidak ditemukan.' })
   async remove(@Param('id') id: string) {
     try {
       const result = await this.tagsService.remove(+id);

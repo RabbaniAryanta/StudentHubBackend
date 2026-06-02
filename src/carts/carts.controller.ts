@@ -1,13 +1,18 @@
 import { Controller, Get, Post, Body, Param, Delete, UseGuards, Request, HttpStatus, HttpException, ParseIntPipe } from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CartsService } from './carts.service';
 import { AuthGuard } from '../auth/auth.guard';
 
+@ApiTags('Carts')
+@ApiBearerAuth()
 @UseGuards(AuthGuard)
 @Controller('carts')
 export class CartsController {
   constructor(private readonly cartsService: CartsService) { }
 
   @Post()
+  @ApiOperation({ summary: 'Membuat atau mengambil cart user' })
+  @ApiResponse({ status: 201, description: 'Cart berhasil dibuat/diambil.' })
   async createCart(@Request() req) {
     try {
       const data = await this.cartsService.getCart(req.user.sub);
@@ -25,6 +30,8 @@ export class CartsController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Mengambil cart milik user login' })
+  @ApiResponse({ status: 200, description: 'Cart berhasil diambil.' })
   async getMyCart(@Request() req) {
     try {
       const data = await this.cartsService.getCart(req.user.sub);
@@ -42,6 +49,19 @@ export class CartsController {
   }
 
   @Post('items')
+  @ApiOperation({ summary: 'Menambahkan item ke cart' })
+  @ApiResponse({ status: 201, description: 'Item berhasil ditambahkan.' })
+  @ApiResponse({ status: 404, description: 'Project tidak ditemukan.' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        projectId: { type: 'number', example: 10 },
+        quantity: { type: 'number', example: 1 },
+      },
+      required: ['projectId'],
+    },
+  })
   async addItem(@Request() req, @Body() body: { projectId: number, quantity?: number }) {
     try {
       if (!body.projectId) {
@@ -68,6 +88,9 @@ export class CartsController {
   }
 
   @Delete('items/:projectId')
+  @ApiOperation({ summary: 'Menghapus item dari cart' })
+  @ApiResponse({ status: 200, description: 'Item berhasil dihapus.' })
+  @ApiResponse({ status: 404, description: 'Item tidak ditemukan di cart.' })
   async removeItem(@Request() req, @Param('projectId', ParseIntPipe) projectId: number) {
     try {
       const data = await this.cartsService.removeItem(req.user.sub, projectId);
@@ -91,6 +114,8 @@ export class CartsController {
   }
 
   @Delete()
+  @ApiOperation({ summary: 'Mengosongkan cart user' })
+  @ApiResponse({ status: 200, description: 'Cart berhasil dikosongkan.' })
   async clearCart(@Request() req) {
     try {
       const data = await this.cartsService.clearCart(req.user.sub);

@@ -1,3 +1,10 @@
+import { ApiProperty } from '@nestjs/swagger';
+
 export class UploadPaymentProofDto {
-  orderId!: number;
+  @ApiProperty({
+    description: 'File bukti pembayaran',
+    type: 'string',
+    format: 'binary',
+  })
+  file!: any;
 }

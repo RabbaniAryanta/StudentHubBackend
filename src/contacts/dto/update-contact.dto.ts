@@ -1,4 +1,4 @@
-import { PartialType } from '@nestjs/mapped-types';
+import { PartialType } from '@nestjs/swagger';
 import { CreateContactDto } from './create-contact.dto';
 import { IsEnum, IsOptional } from 'class-validator';
 import { ContactStatus } from '@prisma/client';

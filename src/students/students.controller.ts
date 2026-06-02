@@ -1,11 +1,13 @@
-import { Controller, UseGuards, Get, Post, Body, Param, Patch, Delete , HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, UseGuards, Get, Post, Body, Param, Patch, Delete, HttpException, HttpStatus } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard, Role } from '../helper/roles-guard';
 import { StudentsService } from './students.service';
 import { CreateStudentDto } from './dto/create-students.dto';
 import { UpdateStudentDto } from './dto/update-students.dto';
 
-
+@ApiTags('Students')
+@ApiBearerAuth()
 @UseGuards(AuthGuard, RolesGuard)
 @Role('ADMIN')
 @Controller('students')
@@ -13,6 +15,11 @@ export class StudentsController {
 	constructor(private readonly studentsService: StudentsService) {}
 
   @Post()
+  @ApiOperation({ summary: 'Membuat data siswa baru' })
+  @ApiResponse({ status: 201, description: 'Data siswa berhasil dibuat.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized — token tidak valid.' })
+  @ApiResponse({ status: 403, description: 'Forbidden — hanya ADMIN yang diizinkan.' })
+  @ApiResponse({ status: 409, description: 'NIS siswa sudah terdaftar.' })
   async create(@Body() createDto: CreateStudentDto) {
     try {
       const result = await this.studentsService.create(createDto);
@@ -26,6 +33,9 @@ export class StudentsController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Mengambil daftar semua siswa' })
+  @ApiResponse({ status: 200, description: 'Daftar siswa berhasil diambil.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized — token tidak valid.' })
   async findAll() {
     try {
       const result = await this.studentsService.findAll();
@@ -36,6 +46,10 @@ export class StudentsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Mengambil detail siswa berdasarkan ID' })
+  @ApiResponse({ status: 200, description: 'Data siswa berhasil diambil.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized — token tidak valid.' })
+  @ApiResponse({ status: 404, description: 'Siswa tidak ditemukan.' })
   async findOne(@Param('id') id: string) {
     try {
       const result = await this.studentsService.findOne(+id);
@@ -50,6 +64,11 @@ export class StudentsController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Memperbarui data siswa berdasarkan ID' })
+  @ApiResponse({ status: 200, description: 'Data siswa berhasil diperbarui.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized — token tidak valid.' })
+  @ApiResponse({ status: 404, description: 'Siswa tidak ditemukan.' })
+  @ApiResponse({ status: 409, description: 'NIS siswa sudah terdaftar.' })
   async update(@Param('id') id: string, @Body() updateDto: UpdateStudentDto) {
     try {
       const result = await this.studentsService.update(+id, updateDto);
@@ -66,6 +85,10 @@ export class StudentsController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Menghapus data siswa berdasarkan ID' })
+  @ApiResponse({ status: 200, description: 'Data siswa berhasil dihapus.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized — token tidak valid.' })
+  @ApiResponse({ status: 404, description: 'Siswa tidak ditemukan.' })
   async remove(@Param('id') id: string) {
     try {
       const result = await this.studentsService.remove(+id);
