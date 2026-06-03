@@ -69,6 +69,7 @@ export class CreateProjectDto {
     type: 'string',
     format: 'binary',
   })
+  @IsOptional()
   thumbnail?: any;
 
   @ApiPropertyOptional({
@@ -76,5 +77,6 @@ export class CreateProjectDto {
     type: 'array',
     items: { type: 'string', format: 'binary' },
   })
+  @IsOptional()
   mediaUrls?: any[];
 }
