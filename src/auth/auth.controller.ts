@@ -4,21 +4,12 @@ import { AuthService } from "./auth.service";
 import FormatValidation from "../helper/validation-formats";
 import { CreateAuthDto } from "./dto/create-auth.dto";
 import { VerifyOtpDto } from "./dto/verify-otp.dto";
-import { RegisterAuthDto } from "./dto/register-auth.dto";
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
 
-    @Post('register')
-    @ApiOperation({ summary: 'Register akun baru student' })
-    @ApiResponse({ status: 201, description: 'Akun berhasil didaftarkan.' })
-    @ApiResponse({ status: 400, description: 'Data request tidak valid.' })
-    @UsePipes(new ValidationPipe({ exceptionFactory: FormatValidation }))
-    async register(@Body() registerDto: RegisterAuthDto) {
-        return this.authService.signUp(registerDto);
-    }
 
     @Post('login')
     @ApiOperation({ summary: 'Login user dan mendapatkan JWT' })
